@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import {
@@ -11,41 +11,39 @@ import {
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { editUser, fetchUsers, setUser } from "../api/users";
+import { editUser, setUser } from "../api/usersApi";
 
 export const UserForm = () => {
+  const localUserList = JSON.parse(localStorage.getItem("users"));
+
   const { id } = useParams();
   const navigate = useNavigate();
-
-  const [user, setUser] = useState([]);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [defaultValues, setDefaultValues] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
-    defaultValues,
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+    },
   });
-console.log('defaultValues', defaultValues);
 
   const fetchData = async () => {
     try {
-      setDataLoading(true);
-      const usersList = await fetchUsers();
       if (id) {
-        const data = usersList.find((user) => user.id === parseInt(id));
-        setUser(data);
+        const data = localUserList.find((user) => user.id === parseInt(id));
+        reset({
+          name: data?.name || "",
+          email: data?.email || "",
+          phone: data?.phone || "",
+        });
       }
     } catch (error) {
       console.error("Error fetching users:", error);
-    } finally {
-      setDataLoading(false);
     }
   };
 
@@ -53,22 +51,27 @@ console.log('defaultValues', defaultValues);
     if (id) {
       fetchData();
     }
-  }, []);
+  }, [id]);
 
-  useEffect(() => {
-    if (user) {
-      setDefaultValues({
-        name: user?.name,
-        email: user?.email,
-        phone: user?.phone,
-      });
-    }
-  }, [user]);
-
-  const onSubmit = (params) => {
+  const onSubmit = async (params) => {
     if (id) {
+      const changedUser = { ...params, id: parseInt(id) };
+      const filteredList = localUserList.filter(
+        (user) => user.id !== parseInt(id)
+      );
+
+      const newUserList = [...filteredList, changedUser];
+
+      localStorage.setItem("users", JSON.stringify(newUserList));
+
       editUser(id, params, handleBack);
     } else {
+      const newUserId = localUserList.length + 1;
+      const newUser = { ...params, id: newUserId };
+      const newUserList = [...localUserList, newUser];
+
+      localStorage.setItem("users", JSON.stringify(newUserList));
+
       setUser(params, handleBack);
     }
   };
@@ -90,15 +93,14 @@ console.log('defaultValues', defaultValues);
 
         <Paper elevation={3} sx={{ p: 4 }}>
           <Typography variant="h5" component="h1" gutterBottom>
-            Create New User
+            {id ? "Edit User" : "Create New User"}
           </Typography>
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <TextField
               fullWidth
               margin="normal"
-              label="User Name"
-              variant="outlined"
+              placeholder="User Name"
               {...register("name", {
                 required: "Name is required",
                 minLength: {
@@ -113,9 +115,8 @@ console.log('defaultValues', defaultValues);
             <TextField
               fullWidth
               margin="normal"
-              label="Email"
+              placeholder="Email"
               type="email"
-              variant="outlined"
               {...register("email", {
                 required: "Email is required",
                 pattern: {
@@ -130,8 +131,7 @@ console.log('defaultValues', defaultValues);
             <TextField
               fullWidth
               margin="normal"
-              label="Phone"
-              variant="outlined"
+              placeholder="Phone"
               {...register("phone", {
                 required: "Phone is required",
                 pattern: {

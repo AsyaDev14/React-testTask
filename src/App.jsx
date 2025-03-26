@@ -1,4 +1,4 @@
-import { Navigate, Route, Router, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router";
 import "./App.scss";
 import { UsersList } from "./components/UsersList";
 import { UserForm } from "./components/UserForm";

@@ -12,6 +12,7 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { editUser, setUser } from "../api/usersApi";
+import { formFields, FormTextField } from "./FormTextField";
 
 export const UserForm = () => {
   const localUserList = JSON.parse(localStorage.getItem("users"));
@@ -97,51 +98,14 @@ export const UserForm = () => {
           </Typography>
 
           <form onSubmit={handleSubmit(onSubmit)}>
-            <TextField
-              fullWidth
-              margin="normal"
-              placeholder="User Name"
-              {...register("name", {
-                required: "Name is required",
-                minLength: {
-                  value: 2,
-                  message: "Name must be at least 2 characters",
-                },
-              })}
-              error={!!errors.name}
-              helperText={errors.name?.message}
-            />
-
-            <TextField
-              fullWidth
-              margin="normal"
-              placeholder="Email"
-              type="email"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Invalid email address",
-                },
-              })}
-              error={!!errors.email}
-              helperText={errors.email?.message}
-            />
-
-            <TextField
-              fullWidth
-              margin="normal"
-              placeholder="Phone"
-              {...register("phone", {
-                required: "Phone is required",
-                pattern: {
-                  value: /^[\d+\s\-()]{7,20}$/,
-                  message: "Invalid phone number",
-                },
-              })}
-              error={!!errors.phone}
-              helperText={errors.phone?.message}
-            />
+            {formFields.map((field) => (
+              <FormTextField
+                key={field.name}
+                field={field}
+                register={register}
+                errors={errors}
+              />
+            ))}
 
             <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
               <Button

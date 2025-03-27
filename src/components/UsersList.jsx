@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { deleteUser, fetchUsers } from "../api/usersApi";
+import { fetchUsers } from "../api/usersApi";
 import { useNavigate } from "react-router";
-import {
-  DataGrid,
-  GridActionsCellItem,
-  GridToolbarContainer,
-} from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 import {
   Paper,
   Button,
@@ -20,17 +16,23 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import AddIcon from "@mui/icons-material/Add";
+import { CustomToolbar } from "./CustomToolbar";
+import { useDeleteUser } from "../customHook/useDeleteUser";
 
 export const UsersList = () => {
   const localUserList = JSON.parse(localStorage.getItem("users"));
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState(null);
 
   const navigate = useNavigate();
+
+  const {
+    openDeleteDialog,
+    handleDeleteClick,
+    handleDeleteConfirm,
+    handleDeleteCancel,
+  } = useDeleteUser(localUserList, setUsers);
 
   const fetchData = async () => {
     try {
@@ -61,10 +63,6 @@ export const UsersList = () => {
     navigate(`/users/edit/${id}`);
   };
 
-  const handleCreate = () => {
-    navigate(`/users/new`);
-  };
-
   const columns = [
     { field: "id", headerName: "ID", width: 70 },
     { field: "name", headerName: "Name", width: 200 },
@@ -89,53 +87,6 @@ export const UsersList = () => {
       ],
     },
   ];
-
-  function CustomToolbar() {
-    return (
-      <GridToolbarContainer sx={{ justifyContent: "flex-end" }}>
-        <Button
-          startIcon={<AddIcon />}
-          variant="contained"
-          onClick={handleCreate}
-          sx={{
-            mb: 2,
-            backgroundColor: "#1976d2",
-            "&:hover": {
-              backgroundColor: "#1565c0",
-            },
-          }}
-        >
-          Create User
-        </Button>
-      </GridToolbarContainer>
-    );
-  }
-
-  const handleDeleteClick = (id) => {
-    setSelectedUserId(id);
-    setOpenDeleteDialog(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      await deleteUser(selectedUserId);
-      const filteredList = localUserList.filter(
-        (user) => user.id !== parseInt(selectedUserId)
-      );
-      localStorage.setItem("users", JSON.stringify(filteredList));
-      setUsers(filteredList);
-    } catch (error) {
-      console.error("Error deleting user:", error);
-    } finally {
-      setOpenDeleteDialog(false);
-      setSelectedUserId(null);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setOpenDeleteDialog(false);
-    setSelectedUserId(null);
-  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
